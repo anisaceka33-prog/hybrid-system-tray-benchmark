@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><PlatformTarget>x64</PlatformTarget><AssemblyName>HybridWebView2App</AssemblyName></PropertyGroup>
+  <ItemGroup><ProjectReference Include="..\Shared\Shared.csproj" /><PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" /></ItemGroup>
+  <ItemGroup><Content Include="Web\**\*" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+</Project>

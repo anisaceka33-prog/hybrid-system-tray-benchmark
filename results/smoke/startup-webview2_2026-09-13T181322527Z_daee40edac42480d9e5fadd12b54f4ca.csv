@@ -1,0 +1,4 @@
+run_id,session_id,timestamp,variant,lifecycle,payload_bytes,direction,metric,value,unit,cycle_index,status,failure_reason,build_commit,runtime_version
+2b99fbfcd2784baa8729596559cbbf67,e0ccadf9473a4ac5b9b248b6b04dfe22,2026-09-13T18:13:22.2654104+00:00,hybrid,reuse,1024,process-to-ui,tti,282.2534,ms,1,ok,,unknown,8.0.30
+5e60f8d1b9ab42af9fc378ca6c776877,d9ce828c07c243098323fff3c8c6c8be,2026-09-13T18:13:22.3878193+00:00,hybrid,reuse,1024,process-to-ui,tti,59.806100000000001,ms,2,ok,,unknown,8.0.30
+1c64114246d54df2b964b4984c53582f,5e61bb55c7024efe85fca3cd0e1b6a68,2026-09-13T18:13:22.4840928+00:00,hybrid,reuse,1024,process-to-ui,tti,56.982599999999998,ms,3,ok,,unknown,8.0.30
