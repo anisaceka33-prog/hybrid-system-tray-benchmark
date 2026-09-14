@@ -25,8 +25,20 @@ switch (cfg.Experiment)
     case "E2":
         await RunE2Async(cfg, writer, gitCommit);
         break;
+    case "E3":
+        await Experiments.RunE3Async(cfg, writer, gitCommit);
+        break;
+    case "E4":
+        await Experiments.RunE4Async(cfg, writer, gitCommit);
+        break;
+    case "E5":
+        await Experiments.RunE5Async(cfg, writer, gitCommit);
+        break;
+    case "E6":
+        await Experiments.RunE6Async(cfg, writer, gitCommit);
+        break;
     default:
-        Console.Error.WriteLine($"Unknown experiment '{cfg.Experiment}'. Valid values: E1, E2.");
+        Console.Error.WriteLine($"Unknown experiment '{cfg.Experiment}'. Valid values: E1, E2, E3, E4, E5, E6.");
         return 2;
 }
 
@@ -125,9 +137,9 @@ static async Task<bool> WaitForFreshEventAsync(string path, string name, TimeSpa
 
 sealed class RunnerConfig
 {
-    public static string HelpText => @"Usage: --experiment=E1|E2 --executable=path --iterations=1 --warmup=0 --payload=1024 --lifecycle=reuse --output=results/raw --timeout-seconds=30
+        public static string HelpText => @"Usage: --experiment=E1|E2|E3|E4|E5|E6 --executable=path --iterations=1 --warmup=0 --payload=1024 --lifecycle=reuse --output=results/raw --timeout-seconds=30
 Options:
-  --experiment    E1|E2 (required)
+    --experiment    E1|E2|E3|E4|E5|E6 (required)
   --executable    path to executable (default: HybridWebView2App.exe)
   --iterations    measurements per session (default: 1)
   --warmup        warmup iterations (default: 0)

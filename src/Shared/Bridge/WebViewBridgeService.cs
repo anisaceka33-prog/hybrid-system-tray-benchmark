@@ -14,7 +14,7 @@ public sealed class BridgeMessageRouter
         {
             "frontend-ready" => Ok(message, "frontend-ready", "ack"),
             "echo" or "ping" => Ok(message, message.Type == "ping" ? "pong" : "echo", _business.EchoPayload(message.Payload)),
-            "operation" => Ok(message, "response", _business.SimulatedBusinessOperation(message.Payload).Output),
+            "operation" => HandleOperation(message),
             "close-ui" or "benchmark-complete" => Ok(message, message.Type, "ack"),
             _ => Error(message, $"unknown message type: {message.Type}")
         };
@@ -23,4 +23,16 @@ public sealed class BridgeMessageRouter
     private static WebViewResponse Error(WebViewMessage m, string error) => new(m.Id, m.ProtocolVersion, false, "error", null, error);
     public static WebViewMessage Deserialize(string json) => JsonSerializer.Deserialize<WebViewMessage>(json) ?? throw new JsonException("Invalid WebView message");
     public static string Serialize(WebViewResponse response) => JsonSerializer.Serialize(response);
+    private WebViewResponse HandleOperation(WebViewMessage m)
+    {
+        try
+        {
+            var result = _business.SimulatedBusinessOperation(m.Payload);
+            return Ok(m, "response", result.Output);
+        }
+        catch (Exception ex)
+        {
+            return Error(m, ex.Message);
+        }
+    }
 }
