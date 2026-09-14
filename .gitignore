@@ -26,5 +26,8 @@ results/raw/*.csv
 results/raw/*.json
 results/raw/*.jsonl
 results/processed/*
+results/figures/*
+results/smoke/*
+results/final-benchmark-package_*.zip
 !results/raw/.gitkeep
 !results/processed/.gitkeep

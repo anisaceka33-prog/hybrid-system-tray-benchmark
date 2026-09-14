@@ -1,0 +1,54 @@
+﻿{
+    "captured_at_utc":  "2026-09-14T00:16:21.8172767+00:00",
+    "windows":  {
+                    "caption":  "Microsoft Windows 11 Enterprise",
+                    "version":  "10.0.26200",
+                    "build":  "26200"
+                },
+    "hardware":  {
+                     "cpu":  "Intel(R) Core(TM) Ultra 7 165U",
+                     "physical_memory_bytes":  33751834624,
+                     "logical_processors":  14
+                 },
+    "dotnet":  {
+                   "sdk_version":  "9.0.311",
+                   "runtimes":  [
+                                    "Microsoft.AspNetCore.App 8.0.24 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]",
+                                    "Microsoft.AspNetCore.App 9.0.13 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]",
+                                    "Microsoft.NETCore.App 8.0.24 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]",
+                                    "Microsoft.NETCore.App 8.0.30 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]",
+                                    "Microsoft.NETCore.App 9.0.13 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]",
+                                    "Microsoft.NETCore.App 9.0.19 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]",
+                                    "Microsoft.NETCore.App 10.0.11 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]",
+                                    "Microsoft.WindowsDesktop.App 8.0.24 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]",
+                                    "Microsoft.WindowsDesktop.App 8.0.30 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]",
+                                    "Microsoft.WindowsDesktop.App 9.0.13 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]",
+                                    "Microsoft.WindowsDesktop.App 9.0.19 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]"
+                                ]
+               },
+    "webview2_runtime_version":  "153.0.4234.32",
+    "build_configuration":  "Release",
+    "architecture":  "x64",
+    "git":  {
+                "commit_sha":  "a58a7b5859de57543749eadf60dfcfd8938b7e22",
+                "worktree_clean":  false,
+                "status":  [
+                               " M .gitignore",
+                               " M benchmarks/BenchmarkRunner/Program.cs",
+                               " M scripts/analyze_results.py",
+                               " M src/HybridWebView2App/App.cs",
+                               " M src/NativeWpfBaseline/App.cs",
+                               "?? benchmarks/BenchmarkRunner/FinalExperiments.cs",
+                               "?? scripts/__pycache__/analyze_results.cpython-314.pyc",
+                               "?? scripts/__pycache__/validate_results.cpython-314.pyc",
+                               "?? scripts/archive_pilot_results.ps1",
+                               "?? scripts/collect_environment.ps1",
+                               "?? scripts/package_results.py",
+                               "?? scripts/requirements-analysis.txt",
+                               "?? scripts/validate_results.py"
+                           ],
+                "tracked_diff_sha256":  "73907dd38220684fcb2049d3b57378a09a776f14e9a5e8e4ee16cd5ea2bdb13e"
+            },
+    "power_mode":  "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)",
+    "repository":  "C:\\Users\\U474769\\Desktop\\hybrid-system-tray-benchmark"
+}

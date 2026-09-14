@@ -15,6 +15,7 @@ public sealed class App : System.Windows.Application
     // benchmark orchestration args
     private string? _benchmarkExperiment;
     private int _benchmarkIterations = 0;
+    private int _benchmarkWarmup = 0;
     private int _benchmarkPayload = 0;
     private bool _benchmarkRunning;
     private TaskCompletionSource<string>? _benchmarkResultTcs;
@@ -28,6 +29,7 @@ public sealed class App : System.Windows.Application
         {
             if (a.StartsWith("--experiment=", StringComparison.OrdinalIgnoreCase)) _benchmarkExperiment = a.Split('=', 2)[1];
             if (a.StartsWith("--iterations=", StringComparison.OrdinalIgnoreCase) && int.TryParse(a.Split('=', 2)[1], out var it)) _benchmarkIterations = it;
+            if (a.StartsWith("--warmup=", StringComparison.OrdinalIgnoreCase) && int.TryParse(a.Split('=', 2)[1], out var warmup)) _benchmarkWarmup = warmup;
             if (a.StartsWith("--payload=", StringComparison.OrdinalIgnoreCase) && int.TryParse(a.Split('=', 2)[1], out var p)) _benchmarkPayload = p;
         }
 
@@ -96,6 +98,7 @@ public sealed class App : System.Windows.Application
             await Task.Delay(200);
             var experiment = _benchmarkExperiment ?? string.Empty;
             var iterations = Math.Max(1, _benchmarkIterations == 0 ? 1 : _benchmarkIterations);
+            var warmup = Math.Max(0, _benchmarkWarmup);
             var payloadSize = Math.Max(0, _benchmarkPayload == 0 ? 1024 : _benchmarkPayload);
 
             if (experiment == "E2")
@@ -103,7 +106,8 @@ public sealed class App : System.Windows.Application
                 // Resource states: capture snapshot, idle CPU, interaction CPU
                 var proc = Process.GetCurrentProcess();
                 var snapshot = ProcessMeasurement.Capture(proc);
-                _log.Event("resources_snapshot", System.Text.Json.JsonSerializer.Serialize(new { totalWorkingSet = snapshot.TotalWorkingSetBytes, totalPrivate = snapshot.TotalPrivateMemoryBytes, processCount = snapshot.Processes.Count }));
+                var webView2Count = snapshot.Processes.Count(item => item.ProcessName.Contains("msedgewebview2", StringComparison.OrdinalIgnoreCase));
+                _log.Event("resources_snapshot", System.Text.Json.JsonSerializer.Serialize(new { totalWorkingSet = snapshot.TotalWorkingSetBytes, totalPrivate = snapshot.TotalPrivateMemoryBytes, processCount = snapshot.Processes.Count, webView2ProcessCount = webView2Count }));
 
                 var idleCpu = await ProcessMeasurement.MeasureCpuPercentAsync(proc, TimeSpan.FromSeconds(5));
                 _log.Event("resources_idle_cpu", System.Text.Json.JsonSerializer.Serialize(new { cpuPercent = idleCpu }));
@@ -111,7 +115,7 @@ public sealed class App : System.Windows.Application
                 // perform a short interaction workload and sample CPU during it
                 var interactionPayload = DeterministicBusinessService.GeneratePayload(payloadSize);
                 var cpuSampleTask = ProcessMeasurement.MeasureCpuPercentAsync(proc, TimeSpan.FromSeconds(1));
-                for (var i = 0; i < Math.Min(5, iterations); i++)
+                for (var i = 0; i < Math.Max(5, iterations); i++)
                 {
                     var script = $"window.__bench.runOperation({System.Text.Json.JsonSerializer.Serialize(interactionPayload)})";
                     try { await _webView!.CoreWebView2.ExecuteScriptAsync(script); } catch { }
@@ -125,17 +129,18 @@ public sealed class App : System.Windows.Application
             if (experiment == "E3")
             {
                 // JS -> .NET bridge measurement: record host and JS RTT per operation
-                for (var i = 1; i <= iterations; i++)
+                for (var i = 1; i <= warmup + iterations; i++)
                 {
                     var payload = DeterministicBusinessService.GeneratePayload(payloadSize);
                     var inner = await ExecuteBridgeOperationAsync(payload);
+                    if (i <= warmup) continue;
                     try
                     {
                         using var doc = System.Text.Json.JsonDocument.Parse(inner);
                         var root = doc.RootElement;
                         var jsRtt = root.TryGetProperty("rttMs", out var j) && j.ValueKind == System.Text.Json.JsonValueKind.Number ? j.GetDouble() : 0.0;
                         var hostRtt = root.TryGetProperty("hostRttMs", out var h) && h.ValueKind == System.Text.Json.JsonValueKind.Number ? h.GetDouble() : 0.0;
-                        _log.Event("js_to_dotnet", System.Text.Json.JsonSerializer.Serialize(new { cycle = i, jsRttMs = jsRtt, hostRttMs = hostRtt }));
+                        _log.Event("js_to_dotnet", System.Text.Json.JsonSerializer.Serialize(new { cycle = i - warmup, jsRttMs = jsRtt, hostRttMs = hostRtt }));
                     }
                     catch (Exception ex)
                     {
@@ -150,16 +155,17 @@ public sealed class App : System.Windows.Application
             if (experiment == "E4")
             {
                 // JavaScript -> .NET -> JavaScript round-trip RTT
-                for (var i = 1; i <= iterations; i++)
+                for (var i = 1; i <= warmup + iterations; i++)
                 {
                     var payload = DeterministicBusinessService.GeneratePayload(payloadSize);
                     var inner = await ExecuteBridgeOperationAsync(payload);
+                    if (i <= warmup) continue;
                     try
                     {
                         using var doc = System.Text.Json.JsonDocument.Parse(inner);
                         var root = doc.RootElement;
                         var rtt = root.TryGetProperty("rttMs", out var r) && r.ValueKind == System.Text.Json.JsonValueKind.Number ? r.GetDouble() : 0.0;
-                        _log.Event("roundtrip_rtt", System.Text.Json.JsonSerializer.Serialize(new { cycle = i, rttMs = rtt }));
+                        _log.Event("roundtrip_rtt", System.Text.Json.JsonSerializer.Serialize(new { cycle = i - warmup, rttMs = rtt }));
                     }
                     catch (Exception ex)
                     {
@@ -177,16 +183,18 @@ public sealed class App : System.Windows.Application
                 var sizes = new[] { 1024, 10240, 102400, 1048576 };
                 foreach (var size in sizes)
                 {
-                    for (var i = 1; i <= iterations; i++)
+                    for (var i = 1; i <= warmup + iterations; i++)
                     {
                         var payload = DeterministicBusinessService.GeneratePayload(size);
                         var inner = await ExecuteBridgeOperationAsync(payload);
+                        if (i <= warmup) continue;
                         try
                         {
                             using var doc = System.Text.Json.JsonDocument.Parse(inner);
                             var root = doc.RootElement;
                             var rtt = root.TryGetProperty("rttMs", out var r) && r.ValueKind == System.Text.Json.JsonValueKind.Number ? r.GetDouble() : 0.0;
-                            _log.Event("payload_rtt", System.Text.Json.JsonSerializer.Serialize(new { size, cycle = i, rttMs = rtt }));
+                            var actualBytes = root.TryGetProperty("payloadBytes", out var bytes) && bytes.ValueKind == System.Text.Json.JsonValueKind.Number ? bytes.GetInt32() : 0;
+                            _log.Event("payload_rtt", System.Text.Json.JsonSerializer.Serialize(new { targetSize = size, actualBytes, cycle = i - warmup, rttMs = rtt }));
                         }
                         catch (Exception ex)
                         {
@@ -202,7 +210,7 @@ public sealed class App : System.Windows.Application
             if (experiment == "E6")
             {
                 // Lifecycle comparison: perform reopen cycles and measure reopen latency
-                for (var i = 1; i <= iterations; i++)
+                for (var i = 1; i <= warmup + iterations; i++)
                 {
                     TaskCompletionSource<bool>? frontendReady = null;
                     if (_mode == LifecycleMode.Reuse)
@@ -220,7 +228,12 @@ public sealed class App : System.Windows.Application
                     await ShowWindowAsync();
                     var completed = frontendReady is null || await Task.WhenAny(frontendReady.Task, Task.Delay(TimeSpan.FromSeconds(30))) == frontendReady.Task;
                     var reopenMs = sw.Elapsed.TotalMilliseconds;
-                    _log.Event("lifecycle_reopen", System.Text.Json.JsonSerializer.Serialize(new { cycle = i, reopenMs, ok = completed }));
+                    if (i > warmup)
+                    {
+                        var snapshot = ProcessMeasurement.Capture(Process.GetCurrentProcess());
+                        var webView2Count = snapshot.Processes.Count(item => item.ProcessName.Contains("msedgewebview2", StringComparison.OrdinalIgnoreCase));
+                        _log.Event("lifecycle_reopen", System.Text.Json.JsonSerializer.Serialize(new { cycle = i - warmup, reopenMs, ok = completed, totalWorkingSet = snapshot.TotalWorkingSetBytes, totalPrivate = snapshot.TotalPrivateMemoryBytes, processCount = snapshot.Processes.Count, webView2ProcessCount = webView2Count }));
+                    }
                     _frontendReadyTcs = null;
                     await Task.Delay(200);
                 }
